@@ -1,0 +1,127 @@
+Student ID: 111483647
+CSE 508 Network Security Fall-2017, Homework 3 -PlugboardProxy
+
+IMPLEMENTATION:
+
+a)Test environment:
+Distributor ID:	Ubuntu
+Description:	Ubuntu 16.04.3 LTS
+Release:	16.04
+Codename:	xenial
+Linux 4.10.0-28-generic x86_64
+
+b)Compiler and its version:
+gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4) 
+
+c)The folder contains following files:
+1.Makefile
+2.pbproxy.c - Actual implementation of the plugboard proxy.
+3.pbproxy.o
+4.mykey - file that contains the key to be used.
+
+d)Functions in pbproxy.c:
+1. main() - Take input from cmd like server_port number,keyfile,destination address, destination port_no.
+	  - checks the mode in which we have to run the code , server_mode or client_mode.
+
+2.start_server() - If the program runs in server mode, creates socket for server, listens for connection request from the client , bind the cilent with port. 
+		 - Initialises a thread for each client using multithreading. This allows multiple clienmts to connect to the srever at a time.
+		-   
+3.doprocess() - At the server side for each client this function handles the read, write , encryption and decryption process. 
+	      - Uses AES encrytion in CTR mode .
+	      - Reads the data received from the client and decrypts it.
+	      - Initialises the IV and encrypts the data to be sent from server to client , and writes it on client socket.
+ 
+4.start_client() - If the program runs in client mode , creates socket for client, connects to the server.
+		 - Initialises the IV , while sending data from the client to server.Encrypts the data to be sent.
+		 - Reads the data packet sent by the server and decrypts it.
+ 
+5.read_keyfile() - Takes the filename entered by the user and returns the value of the key stored in that file.
+
+e)Steps to follows:
+1.Run the makefile using "make command".
+2.Run the following commands as sepcified below.
+
+OUTPUT 1:Using 3 terminals 
+->Command to run on the actual server machine:
+parallels@parallels-vm:~/Desktop/ns_hw3$ nc -l -p 12345
+hey
+how r u
+send me the data
+sending data
+
+->Command on proxy server is as follows:
+parallels@parallels-vm:~/Desktop/ns_hw3$ ./pbproxy -l 2234 -k mykey localhost 12345
+keyfile = 123456jkbsvjhjhvku
+
+server_mode on
+server_port = 2234
+dst_addr = localhost
+dst_port = 12345
+Starting new thread
+Connection to ssh established!
+INFO: Sending data to ssh client
+INFO: Sending data to ssh client
+Closing connectionsand exiting thread!
+
+->Command on proxy client is as follows:
+parallels@parallels-vm:~/Desktop/ns_hw3$ ./pbproxy -k mykey localhost 2234
+keyfile = 123456jkbsvjhjhvku
+
+server_mode off
+server_port = 0
+dst_addr = localhost
+dst_port = 2234
+hey
+how r u
+send me the data
+sending data
+
+
+OUTPUT 2:Using 2 terminals- ssh
+->Command on server side :
+parallels@parallels-vm:~/Desktop/ns_hw3$ ./pbproxy -l 2234 -k mykey localhost 22keyfile = 123456jkbsvjhjhvku
+
+server_mode on
+server_port = 2234
+dst_addr = localhost
+dst_port = 22
+Starting new thread
+Connection to ssh established!
+INFO: Sending data to ssh client
+INFO: Sending data to ssh client
+INFO: Sending data to ssh client
+INFO: Sending data to ssh client
+
+->Command on the client side :
+parallels@parallels-vm:~/Desktop/ns_hw3$ ssh -o "ProxyCommand ./pbproxy -k mykey localhost 2234" localhost
+parallels@localhost's password: 
+Welcome to Ubuntu 16.04.3 LTS (GNU/Linux 4.10.0-28-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+203 packages can be updated.
+84 updates are security updates.
+
+*** System restart required ***
+Last login: Thu Nov  9 15:43:49 2017 from 127.0.0.1
+parallels@parallels-vm:~$ ls
+Desktop    Downloads         Music     Public     Videos
+Documents  examples.desktop  Pictures  Templates
+parallels@parallels-vm:~$ cd Pictures
+parallels@parallels-vm:~/Pictures$ ls
+proxyclnt1.png  proxyserv1.png  server1.png
+parallels@parallels-vm:~/Pictures$ ^C
+parallels@parallels-vm:~/Pictures$ exit
+logout
+Connection to localhost closed.
+parallels@parallels-vm:~/Desktop/ns_hw3$ 
+
+f)RESOURCES:
+http://www.gurutechnologies.net/blog/aes-ctr-encryption-in-c/
+http://www.cs.rpi.edu/~moorthy/Courses/os98/Pgms/socket.html
+http://www.geeksforgeeks.org/socket-programming-cc/
+http://man7.org/linux/man-pages/man2/fcntl.2.html
+
+
